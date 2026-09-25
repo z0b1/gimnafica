@@ -20,7 +20,8 @@ Next.js 16 (App Router) · PostgreSQL · Prisma 7 · Tailwind CSS 4 · zod · jo
    ```
 2. Napravite `.env` na osnovu `.env.example` i popunite:
    - `DATABASE_URL` – Postgres baza (Neon, Supabase ili lokalni `docker compose up -d`).
-     Za Neon/Supabase ostavite `?sslmode=require` na kraju adrese. Kod Supabase-a koristite *direct* ili *session pooler* adresu (ne *transaction pooler*).
+     Za Neon/Supabase ostavite `sslmode=verify-full` (ili `require`) na kraju adrese.
+   - `DATABASE_URL_UNPOOLED` – samo za Neon: direktna adresa (bez `-pooler`), koristi je `npm run db:migrate` i testovi. Aplikacija koristi `DATABASE_URL`.
    - `SESSION_SECRET` – nasumičan string od bar 32 karaktera:
      `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`
    - `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` – prvi administrator.

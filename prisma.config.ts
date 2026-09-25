@@ -11,6 +11,7 @@ export default defineConfig({
     // Not env("DATABASE_URL"): that throws when the variable is missing, which
     // breaks `prisma generate` (postinstall) on CI/Vercel where no DB is needed.
     // Commands that do connect (migrate, seed) still fail clearly without it.
-    url: process.env.DATABASE_URL ?? "",
+    // Migrations need a direct connection, not Neon's pgbouncer pooler.
+    url: process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL ?? "",
   },
 });
