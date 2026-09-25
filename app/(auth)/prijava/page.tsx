@@ -7,8 +7,7 @@ export const metadata: Metadata = { title: "Prijava" };
 export default function LoginPage() {
   return (
     <div className="card">
-      <h1 className="mb-1 text-xl font-bold">Prijava</h1>
-      <p className="mb-5 text-sm text-stone-600">Poručite kafu za pauzu.</p>
+      <h1 className="mb-5 text-xl font-bold">Prijava</h1>
       <LoginForm />
       <p className="mt-5 text-center text-sm text-stone-600">
         Nemate nalog?{" "}

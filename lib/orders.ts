@@ -74,15 +74,39 @@ export async function getProfessorOrder(userId: string) {
   };
 }
 
+/** Items of the professor's most recent completed order, for "order the same again". */
+export async function getLastCompletedItems(userId: string) {
+  const last = await db.order.findFirst({
+    where: { userId, status: "DONE" },
+    orderBy: { updatedAt: "desc" },
+    select: {
+      items: {
+        where: { coffeeType: { active: true } },
+        select: { coffeeTypeId: true, quantity: true, coffeeType: { select: { name: true } } },
+        orderBy: { coffeeType: { sortOrder: "asc" } },
+      },
+    },
+  });
+  return (last?.items ?? []).map((i) => ({
+    coffeeTypeId: i.coffeeTypeId,
+    quantity: i.quantity,
+    name: i.coffeeType.name,
+  }));
+}
+
 export type KitchenSummary = {
   roundId: string;
   openedAt: string;
   total: number;
   totals: { coffeeTypeId: string; name: string; quantity: number }[];
+  cancelled: number;
   orders: {
     id: string;
     professor: string;
+    createdAt: string;
     updatedAt: string;
+    /** Changed after it was first placed. */
+    edited: boolean;
     items: { name: string; quantity: number }[];
   }[];
   /** Changes whenever any order in the round is created, edited or cancelled. */
@@ -91,7 +115,7 @@ export type KitchenSummary = {
 
 export async function getKitchenSummary(): Promise<KitchenSummary> {
   const round = await ensureOpenRound();
-  const [orders, coffeeTypes, stats] = await Promise.all([
+  const [orders, coffeeTypes, stats, cancelled] = await Promise.all([
     db.order.findMany({
       where: { roundId: round.id, status: "ACTIVE" },
       include: { ...orderInclude, user: { select: { name: true } } },
@@ -103,6 +127,7 @@ export async function getKitchenSummary(): Promise<KitchenSummary> {
       _count: true,
       _max: { updatedAt: true },
     }),
+    db.order.count({ where: { roundId: round.id, status: "CANCELLED" } }),
   ]);
 
   const qty = new Map<string, number>();
@@ -123,10 +148,13 @@ export async function getKitchenSummary(): Promise<KitchenSummary> {
     openedAt: round.openedAt.toISOString(),
     total: totals.reduce((sum, t) => sum + t.quantity, 0),
     totals,
+    cancelled,
     orders: orders.map((o) => ({
       id: o.id,
       professor: o.user.name,
+      createdAt: o.createdAt.toISOString(),
       updatedAt: o.updatedAt.toISOString(),
+      edited: o.updatedAt.getTime() - o.createdAt.getTime() > 2000,
       items: o.items.map((i) => ({ name: i.coffeeType.name, quantity: i.quantity })),
     })),
     version: `${round.id}:${stats._count}:${stats._max.updatedAt?.getTime() ?? 0}`,

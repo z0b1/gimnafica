@@ -5,7 +5,7 @@ import { requireRole } from "@/lib/auth";
 import { cancelOrder as cancel, OrderError, submitOrder as submit } from "@/lib/orders";
 import { orderItemsSchema } from "@/lib/validation";
 
-export type OrderFormState = { error?: string; ok?: string } | undefined;
+export type OrderFormState = { error?: string } | undefined;
 
 export async function submitOrder(_prev: OrderFormState, formData: FormData): Promise<OrderFormState> {
   const user = await requireRole("PROFESOR");
@@ -23,7 +23,7 @@ export async function submitOrder(_prev: OrderFormState, formData: FormData): Pr
     throw e;
   }
   revalidatePath("/profesor");
-  return { ok: "Porudžbina je poslata kuhinji." };
+  return undefined;
 }
 
 export async function cancelOrder() {

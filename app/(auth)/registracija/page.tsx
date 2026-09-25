@@ -9,7 +9,7 @@ export default function SignUpPage() {
     <div className="card">
       <h1 className="mb-1 text-xl font-bold">Registracija</h1>
       <p className="mb-5 text-sm text-stone-600">
-        Administrator će odobriti vaš nalog pre prve prijave.
+        Nalog postaje aktivan kada ga administrator odobri.
       </p>
       <SignUpForm />
       <p className="mt-5 text-center text-sm text-stone-600">

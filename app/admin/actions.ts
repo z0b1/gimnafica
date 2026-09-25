@@ -6,12 +6,14 @@ import { requireRole } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { approveSchema, coffeeTypeNameSchema } from "@/lib/validation";
 
-export type AdminFormState = { error?: string } | undefined;
+// `name` echoes the submitted value so the input keeps it after React resets the form.
+export type AdminFormState = { error?: string; ok?: boolean; name?: string } | undefined;
 
 const idSchema = z.string().min(1);
 
 function done() {
-  revalidatePath("/admin");
+  // Covers /admin and /admin/kafe.
+  revalidatePath("/admin", "layout");
 }
 
 /** Approve a pending user, or change an existing user's role. */
@@ -38,15 +40,16 @@ export async function blockUser(formData: FormData) {
 
 export async function addCoffeeType(_prev: AdminFormState, formData: FormData): Promise<AdminFormState> {
   await requireRole("ADMIN");
-  const parsed = coffeeTypeNameSchema.safeParse(formData.get("name"));
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message };
+  const raw = String(formData.get("name") ?? "");
+  const parsed = coffeeTypeNameSchema.safeParse(raw);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message, name: raw };
 
   const name = parsed.data;
   const existing = await db.coffeeType.findFirst({
     where: { name: { equals: name, mode: "insensitive" } },
   });
   if (existing) {
-    if (existing.active) return { error: "Ta vrsta već postoji." };
+    if (existing.active) return { error: "Ta vrsta već postoji.", name: raw };
     await db.coffeeType.update({ where: { id: existing.id }, data: { active: true } });
   } else {
     const last = await db.coffeeType.aggregate({ _max: { sortOrder: true } });
@@ -54,6 +57,22 @@ export async function addCoffeeType(_prev: AdminFormState, formData: FormData): 
   }
   done();
   return undefined;
+}
+
+export async function renameCoffeeType(_prev: AdminFormState, formData: FormData): Promise<AdminFormState> {
+  await requireRole("ADMIN");
+  const id = idSchema.parse(formData.get("id"));
+  const raw = String(formData.get("name") ?? "");
+  const parsed = coffeeTypeNameSchema.safeParse(raw);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message, name: raw };
+
+  const clash = await db.coffeeType.findFirst({
+    where: { name: { equals: parsed.data, mode: "insensitive" }, id: { not: id } },
+  });
+  if (clash) return { error: "Vrsta sa tim nazivom već postoji.", name: raw };
+  await db.coffeeType.update({ where: { id }, data: { name: parsed.data } });
+  done();
+  return { ok: true };
 }
 
 export async function toggleCoffeeType(formData: FormData) {

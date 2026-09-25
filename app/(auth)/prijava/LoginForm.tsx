@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { FormError } from "@/components/FormError";
+import { PasswordInput } from "@/components/PasswordInput";
 import { signIn } from "../actions";
 
 export function LoginForm() {
@@ -15,8 +16,7 @@ export function LoginForm() {
       </div>
       <div>
         <label htmlFor="password" className="label">Lozinka</label>
-        <input id="password" name="password" type="password" autoComplete="current-password" required
-          className="input" />
+        <PasswordInput id="password" name="password" autoComplete="current-password" required />
       </div>
       <FormError message={state?.error} />
       <button disabled={pending} className="btn-primary w-full py-3">

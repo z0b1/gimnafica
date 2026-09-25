@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
 import { AppHeader } from "@/components/AppHeader";
 import { AutoRefresh } from "@/components/AutoRefresh";
+import { SubmitButton } from "@/components/SubmitButton";
 import { requireRole } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { getProfessorOrder } from "@/lib/orders";
+import { getLastCompletedItems, getProfessorOrder } from "@/lib/orders";
 import { ORDER_STATUS_LABELS, formatTime } from "@/lib/strings";
+import { MAX_QUANTITY } from "@/lib/validation";
 import { cancelOrder } from "./actions";
 import { OrderForm } from "./OrderForm";
 
-export const metadata: Metadata = { title: "Poruči kafu" };
+export const metadata: Metadata = { title: "Kafa" };
 
 const STATUS_STYLES = {
   ACTIVE: "bg-amber-100 text-amber-900",
@@ -18,13 +20,14 @@ const STATUS_STYLES = {
 
 export default async function ProfessorPage() {
   const user = await requireRole("PROFESOR");
-  const [{ order, inOpenRound }, coffeeTypes] = await Promise.all([
+  const [{ order, inOpenRound }, coffeeTypes, lastItems] = await Promise.all([
     getProfessorOrder(user.id),
     db.coffeeType.findMany({
       where: { active: true },
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
       select: { id: true, name: true },
     }),
+    getLastCompletedItems(user.id),
   ]);
 
   const active = inOpenRound && order?.status === "ACTIVE";
@@ -38,42 +41,47 @@ export default async function ProfessorPage() {
       {/* Picks up the kitchen closing the round. */}
       <AutoRefresh seconds={15} />
       <main className="mx-auto w-full max-w-xl flex-1 space-y-4 px-4 py-6">
-        <h1 className="text-2xl font-bold">Kafa za pauzu</h1>
-
+        <h1 className="sr-only">Kafa za pauzu</h1>
         {order && (
-          <section className="card">
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <h2 className="font-semibold">Vaša porudžbina</h2>
-              <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_STYLES[order.status]}`}>
+          <section className="card" aria-live="polite">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="section-title">Vaša porudžbina</h2>
+                <p className="muted mt-0.5">
+                  {order.status === "DONE"
+                    ? "Kuhinja je završila prethodnu rundu. Možete poručiti za sledeću pauzu."
+                    : order.status === "CANCELLED"
+                      ? "Otkazali ste porudžbinu."
+                      : `Kuhinja je vidi od ${formatTime(order.createdAt)}. Možete je menjati dok se runda ne završi.`}
+                </p>
+              </div>
+              <span className={`badge shrink-0 ${STATUS_STYLES[order.status]}`}>
                 {ORDER_STATUS_LABELS[order.status]}
               </span>
             </div>
-            <ul className="text-sm text-stone-700">
+            <ul className={`mt-3 space-y-1 ${order.status === "CANCELLED" ? "text-stone-400 line-through" : ""}`}>
               {order.items.map((i) => (
-                <li key={i.id}>
-                  {i.quantity}× {i.coffeeType.name}
+                <li key={i.id} className="flex justify-between">
+                  <span>{i.coffeeType.name}</span>
+                  <span className="font-semibold tabular-nums">{i.quantity}</span>
                 </li>
               ))}
             </ul>
-            <p className="mt-2 text-xs text-stone-500">
-              {order.status === "DONE"
-                ? "Kuhinja je pripremila ovu porudžbinu. Možete poručiti ponovo za sledeću pauzu."
-                : `Poslednja izmena u ${formatTime(order.updatedAt)}`}
-            </p>
             {active && (
-              <form action={cancelOrder} className="mt-3">
-                <button className="btn-danger">Otkaži porudžbinu</button>
+              <form action={cancelOrder} className="mt-4 border-t border-stone-100 pt-4">
+                <SubmitButton className="btn-danger" pendingText="Otkazivanje…">
+                  Otkaži porudžbinu
+                </SubmitButton>
               </form>
             )}
           </section>
         )}
 
         <section className="card">
-          <h2 className="mb-3 font-semibold">
-            {active ? "Izmeni porudžbinu" : "Nova porudžbina"}
-          </h2>
+          <h2 className="section-title mb-1">{active ? "Izmena porudžbine" : "Nova porudžbina"}</h2>
+          <p className="muted mb-3">Najviše {MAX_QUANTITY} komada po vrsti.</p>
           {coffeeTypes.length === 0 ? (
-            <p className="text-sm text-stone-600">Trenutno nema dostupnih kafa.</p>
+            <p className="text-sm text-stone-600">Trenutno nema dostupnih vrsta kafe.</p>
           ) : (
             // Remount (reset steppers) when switching between new and edit.
             <OrderForm
@@ -81,6 +89,7 @@ export default async function ProfessorPage() {
               coffeeTypes={coffeeTypes}
               initial={initial}
               isEdit={active}
+              lastItems={active ? [] : lastItems}
             />
           )}
         </section>
