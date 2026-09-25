@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PRIVATE_PAGE } from "@/lib/site";
 import { AppHeader } from "@/components/AppHeader";
 import { SubmitButton } from "@/components/SubmitButton";
 import { requireRole } from "@/lib/auth";
@@ -8,7 +9,7 @@ import { blockUser, setUserRole } from "./actions";
 import { RoleSelect } from "./RoleSelect";
 import { UsersPanel } from "./UsersPanel";
 
-export const metadata: Metadata = { title: "Korisnici" };
+export const metadata: Metadata = { title: "Korisnici", robots: PRIVATE_PAGE };
 
 export default async function AdminUsersPage() {
   const admin = await requireRole("ADMIN");

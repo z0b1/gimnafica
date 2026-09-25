@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PRIVATE_PAGE } from "@/lib/site";
 import { AppHeader } from "@/components/AppHeader";
 import { AutoRefresh } from "@/components/AutoRefresh";
 import { SubmitButton } from "@/components/SubmitButton";
@@ -10,7 +11,7 @@ import { MAX_QUANTITY } from "@/lib/validation";
 import { cancelOrder } from "./actions";
 import { OrderForm } from "./OrderForm";
 
-export const metadata: Metadata = { title: "Kafa" };
+export const metadata: Metadata = { title: "Kafa", robots: PRIVATE_PAGE };
 
 const STATUS_STYLES = {
   ACTIVE: "bg-amber-100 text-amber-900",

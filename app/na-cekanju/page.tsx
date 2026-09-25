@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
+import { PRIVATE_PAGE } from "@/lib/site";
 import { redirect } from "next/navigation";
 import { Logo } from "@/components/AppHeader";
 import { AutoRefresh } from "@/components/AutoRefresh";
 import { getCurrentUser, homePathFor } from "@/lib/auth";
 
-export const metadata: Metadata = { title: "Nalog na čekanju" };
+export const metadata: Metadata = { title: "Nalog na čekanju", robots: PRIVATE_PAGE };
 
 export default async function PendingPage() {
   const user = await getCurrentUser();

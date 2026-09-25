@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PRIVATE_PAGE } from "@/lib/site";
 import { AppHeader } from "@/components/AppHeader";
 import { requireRole } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -6,7 +7,7 @@ import { daysAgo } from "@/lib/strings";
 import { AddCoffeeTypeForm } from "./AddCoffeeTypeForm";
 import { CoffeeTypeRow } from "./CoffeeTypeRow";
 
-export const metadata: Metadata = { title: "Vrste kafe" };
+export const metadata: Metadata = { title: "Vrste kafe", robots: PRIVATE_PAGE };
 
 export default async function CoffeeTypesPage() {
   const admin = await requireRole("ADMIN");

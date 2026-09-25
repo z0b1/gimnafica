@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PRIVATE_PAGE } from "@/lib/site";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
@@ -17,7 +18,7 @@ import {
 } from "@/lib/strings";
 import { BarList } from "./BarList";
 
-export const metadata: Metadata = { title: "Istorija" };
+export const metadata: Metadata = { title: "Istorija", robots: PRIVATE_PAGE };
 
 const PAGE_SIZE = 10;
 const STATS_DAYS = 30;

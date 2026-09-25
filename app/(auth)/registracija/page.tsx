@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SignUpForm } from "./SignUpForm";
 
-export const metadata: Metadata = { title: "Registracija" };
+export const metadata: Metadata = {
+  title: "Registracija",
+  description: "Napravite nalog za Gimnaficu kao profesor ili kao član kuhinje. Nalog postaje aktivan kada ga administrator odobri.",
+  alternates: { canonical: "/registracija" },
+};
 
 export default function SignUpPage() {
   return (

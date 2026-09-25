@@ -44,6 +44,14 @@ Next.js 16 (App Router) · PostgreSQL · Prisma 7 · Tailwind CSS 4 · zod · jo
 4. Kuhinja na `/kuhinja` odmah vidi ukupno po vrsti. Kliknite **„Uključi zvuk”** jednom (pregledač inače ne dozvoljava zvuk).
 5. Posle pauze kuhinja klikne **„Završi rundu”**.
 
+## SEO i deljenje linka
+
+- OG/Twitter slika: `app/opengraph-image.jpg` (1200×630), opis u `opengraph-image.alt.txt`.
+- `robots.txt` i `sitemap.xml` puštaju samo javne stranice (prijava, registracija); sve iza prijave je `noindex`.
+- Apsolutne adrese dolaze iz `SITE_URL` (ili automatski sa Vercela). Postavlja se pre build-a.
+
+Fotografija šoljice: [Dani (@frokz)](https://unsplash.com/@frokz) na [Unsplash](https://unsplash.com/photos/ZLqxSzvVr7I), pod [Unsplash licencom](https://unsplash.com/license).
+
 ## Skripte
 
 | Komanda | Opis |
