@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  PROFESOR
+  KUHINJA
+  ADMIN
+}
+
+enum UserStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum OrderStatus {
+  ACTIVE
+  DONE
+  CANCELLED
+}
+
+model User {
+  id            String     @id @default(cuid())
+  name          String
+  email         String     @unique
+  passwordHash  String
+  // Role the user asked for at sign-up; admin may change it on approval.
+  requestedRole Role
+  role          Role?
+  status        UserStatus @default(PENDING)
+  createdAt     DateTime   @default(now())
+
+  orders       Order[]
+  closedRounds Round[] @relation("ClosedBy")
+}
+
+model CoffeeType {
+  id        String      @id @default(cuid())
+  name      String      @unique
+  active    Boolean     @default(true)
+  sortOrder Int         @default(0)
+  items     OrderItem[]
+}
+
+// One lunch break. Exactly one round is open (closedAt = null) at a time.
+model Round {
+  id         String    @id @default(cuid())
+  openedAt   DateTime  @default(now())
+  closedAt   DateTime?
+  closedById String?
+  closedBy   User?     @relation("ClosedBy", fields: [closedById], references: [id])
+  orders     Order[]
+
+  @@index([closedAt])
+}
+
+model Order {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roundId   String
+  round     Round       @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  status    OrderStatus @default(ACTIVE)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  items     OrderItem[]
+
+  // One order per professor per round; re-submitting updates it.
+  @@unique([userId, roundId])
+}
+
+model OrderItem {
+  id           String     @id @default(cuid())
+  orderId      String
+  order        Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  coffeeTypeId String
+  coffeeType   CoffeeType @relation(fields: [coffeeTypeId], references: [id])
+  quantity     Int
+
+  @@unique([orderId, coffeeTypeId])
+}

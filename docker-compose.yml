@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: gimnafica
+      POSTGRES_PASSWORD: gimnafica
+      POSTGRES_DB: gimnafica
+    ports:
+      - "5432:5432"
+    volumes:
+      - gimnafica-db:/var/lib/postgresql/data
+
+volumes:
+  gimnafica-db:
